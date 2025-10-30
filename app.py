@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from backend.backend_openai import *
+
 
 st.set_page_config(page_title="Mental Health Bot", page_icon="🧠")
 st.title("🧠 Mental Health Support Bot")
@@ -29,4 +29,5 @@ if prompt := st.chat_input("How can I help you?"):
         )
         reply = response.choices[0].message.content
         st.write(reply)
+
         st.session_state.messages.append({"role": "assistant", "content": reply})
