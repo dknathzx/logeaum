@@ -1,33 +1,28 @@
-import streamlit as st
-import openai
+# app.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from backend_openai import get_openai_response
 
+app = FastAPI()
 
-st.set_page_config(page_title="Mental Health Bot", page_icon="🧠")
-st.title("🧠 Mental Health Support Bot")
+# Allow frontend access (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or specify your frontend URL later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Get API key from Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+@app.get("/")
+def home():
+    return {"message": "LOGEAUM Backend Running Successfully 🚀"}
 
-# Chat interface
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
-
-if prompt := st.chat_input("How can I help you?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
-    
-    with st.chat_message("assistant"):
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=200
-        )
-        reply = response.choices[0].message.content
-        st.write(reply)
-
-        st.session_state.messages.append({"role": "assistant", "content": reply})
+@app.post("/chat")
+async def chat(request: dict):
+    """Handle chat messages from frontend"""
+    message = request.get("message", "")
+    if not message:
+        return {"reply": "Please enter a message."}
+    reply = get_openai_response(message)
+    return {"reply": reply}
